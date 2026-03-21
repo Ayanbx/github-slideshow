@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>City Schools Football Tournament Manager</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121c30;
+      --muted: #7f8ba4;
+      --text: #eef4ff;
+      --accent: #31c48d;
+      --danger: #f66d6d;
+      --warning: #f9b949;
+      --border: #263453;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1220 0%, #0e1630 100%);
+      color: var(--text);
+    }
+    header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(8px);
+      background: rgba(11, 18, 32, 0.85);
+      z-index: 10;
+    }
+    h1 { margin: 0; font-size: 1.25rem; }
+    .sub { color: var(--muted); font-size: .9rem; margin-top: .25rem; }
+    .container {
+      max-width: 1200px;
+      margin: 1rem auto 2rem;
+      padding: 0 1rem;
+      display: grid;
+      gap: 1rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: .75rem;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: .9rem;
+    }
+    .kpi { font-size: 1.8rem; font-weight: 700; margin-top: .2rem; }
+    .label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+    .tabs { display: flex; gap: .5rem; flex-wrap: wrap; }
+    button, select, input {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .5rem .65rem;
+      background: #0f1a31;
+      color: var(--text);
+    }
+    button { cursor: pointer; }
+    button.primary { background: #1b9c6e; border-color: #1b9c6e; }
+    button.danger { background: #a53b3b; border-color: #a53b3b; }
+    .tab-btn.active { border-color: var(--accent); color: var(--accent); }
+    .section { display: none; }
+    .section.active { display: block; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      padding: .55rem .45rem;
+      font-size: .9rem;
+      vertical-align: top;
+    }
+    th { color: #c9d6f5; }
+    .pill {
+      display: inline-block;
+      padding: .2rem .45rem;
+      border-radius: 999px;
+      font-size: .78rem;
+      border: 1px solid var(--border);
+      color: #c2d0ef;
+    }
+    .row {
+      display: flex;
+      gap: .6rem;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+    .row > div { min-width: 140px; }
+    .muted { color: var(--muted); }
+    .gain { color: var(--accent); }
+    .loss { color: var(--danger); }
+    .warning { color: var(--warning); }
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚽ City Schools Football Tournament Manager</h1>
+    <div class="sub">Track teams, players, match analytics, and run a virtual fantasy betting league.</div>
+  </header>
+
+  <main class="container">
+    <section class="grid" id="kpis"></section>
+
+    <section class="card">
+      <div class="tabs" id="tabs">
+        <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+        <button class="tab-btn" data-tab="teams">Teams & Standings</button>
+        <button class="tab-btn" data-tab="players">Player Stats</button>
+        <button class="tab-btn" data-tab="matches">Match Center</button>
+        <button class="tab-btn" data-tab="fantasy">Fantasy Betting</button>
+      </div>
+    </section>
+
+    <section id="dashboard" class="section active"></section>
+    <section id="teams" class="section"></section>
+    <section id="players" class="section"></section>
+    <section id="matches" class="section"></section>
+    <section id="fantasy" class="section"></section>
+  </main>
+
+  <script>
+    const state = {
+      teams: [
+        { id: 1, name: 'Riverside High', cityZone: 'North' },
+        { id: 2, name: 'Central Academy', cityZone: 'Central' },
+        { id: 3, name: 'Starlight School', cityZone: 'West' },
+        { id: 4, name: 'Greenfield Public', cityZone: 'East' }
+      ],
+      players: [
+        { id: 1, name: 'Arjun Nair', teamId: 1, pos: 'FW', goals: 7, assists: 3, shotsOnTarget: 15, tackles: 4, saves: 0, yellow: 1, red: 0, mins: 320 },
+        { id: 2, name: 'Kabir Das', teamId: 1, pos: 'MF', goals: 2, assists: 5, shotsOnTarget: 8, tackles: 14, saves: 0, yellow: 2, red: 0, mins: 335 },
+        { id: 3, name: 'Rohan Singh', teamId: 2, pos: 'FW', goals: 6, assists: 1, shotsOnTarget: 13, tackles: 3, saves: 0, yellow: 1, red: 0, mins: 310 },
+        { id: 4, name: 'Aditya Paul', teamId: 2, pos: 'GK', goals: 0, assists: 0, shotsOnTarget: 0, tackles: 1, saves: 22, yellow: 0, red: 0, mins: 360 },
+        { id: 5, name: 'Ishaan Roy', teamId: 3, pos: 'FW', goals: 5, assists: 4, shotsOnTarget: 12, tackles: 2, saves: 0, yellow: 0, red: 0, mins: 300 },
+        { id: 6, name: 'Zayn Khan', teamId: 3, pos: 'DF', goals: 1, assists: 1, shotsOnTarget: 3, tackles: 21, saves: 0, yellow: 3, red: 0, mins: 355 },
+        { id: 7, name: 'Veer Mehta', teamId: 4, pos: 'FW', goals: 4, assists: 2, shotsOnTarget: 10, tackles: 5, saves: 0, yellow: 2, red: 0, mins: 295 },
+        { id: 8, name: 'Dhruv Iyer', teamId: 4, pos: 'GK', goals: 0, assists: 0, shotsOnTarget: 0, tackles: 1, saves: 19, yellow: 0, red: 0, mins: 340 }
+      ],
+      matches: [
+        { id: 1001, date: '2026-03-10', home: 1, away: 2, homeGoals: 2, awayGoals: 1, completed: true },
+        { id: 1002, date: '2026-03-11', home: 3, away: 4, homeGoals: 1, awayGoals: 1, completed: true },
+        { id: 1003, date: '2026-03-14', home: 1, away: 3, homeGoals: 3, awayGoals: 2, completed: true },
+        { id: 1004, date: '2026-03-15', home: 2, away: 4, homeGoals: 2, awayGoals: 0, completed: true },
+        { id: 1005, date: '2026-03-22', home: 4, away: 1, homeGoals: null, awayGoals: null, completed: false },
+        { id: 1006, date: '2026-03-23', home: 2, away: 3, homeGoals: null, awayGoals: null, completed: false }
+      ],
+      wallet: 1000,
+      bets: JSON.parse(localStorage.getItem('schoolFantasyBets') || '[]')
+    };
+
+    function teamName(teamId) {
+      return state.teams.find(t => t.id === teamId)?.name || 'Unknown Team';
+    }
+
+    function pointsForMatch(m) {
+      if (!m.completed) return { home: 0, away: 0 };
+      if (m.homeGoals > m.awayGoals) return { home: 3, away: 0 };
+      if (m.homeGoals < m.awayGoals) return { home: 0, away: 3 };
+      return { home: 1, away: 1 };
+    }
+
+    function standings() {
+      const table = Object.fromEntries(state.teams.map(t => [t.id, {
+        teamId: t.id, team: t.name, played: 0, won: 0, draw: 0, lost: 0,
+        gf: 0, ga: 0, gd: 0, pts: 0
+      }]));
+
+      state.matches.filter(m => m.completed).forEach(m => {
+        const h = table[m.home], a = table[m.away];
+        h.played++; a.played++;
+        h.gf += m.homeGoals; h.ga += m.awayGoals;
+        a.gf += m.awayGoals; a.ga += m.homeGoals;
+        const p = pointsForMatch(m);
+        h.pts += p.home; a.pts += p.away;
+        if (p.home === 3) { h.won++; a.lost++; }
+        else if (p.away === 3) { a.won++; h.lost++; }
+        else { h.draw++; a.draw++; }
+      });
+
+      return Object.values(table)
+        .map(r => ({ ...r, gd: r.gf - r.ga }))
+        .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+    }
+
+    function fantasyPoints(p) {
+      return (p.goals * 5) + (p.assists * 3) + (p.shotsOnTarget * 1) + (p.tackles * 0.5) + (p.saves * 1.5) - (p.yellow * 1) - (p.red * 3);
+    }
+
+    function renderKpis() {
+      const played = state.matches.filter(m => m.completed);
+      const totalGoals = played.reduce((n, m) => n + m.homeGoals + m.awayGoals, 0);
+      const avgGoals = played.length ? (totalGoals / played.length).toFixed(2) : '0.00';
+      const topScorer = [...state.players].sort((a,b) => b.goals - a.goals)[0];
+      const oddsMarkets = state.matches.filter(m => !m.completed).length * 3;
+
+      document.getElementById('kpis').innerHTML = `
+        <article class="card"><div class="label">Teams</div><div class="kpi">${state.teams.length}</div></article>
+        <article class="card"><div class="label">Matches Played</div><div class="kpi">${played.length}</div></article>
+        <article class="card"><div class="label">Avg Goals/Match</div><div class="kpi">${avgGoals}</div></article>
+        <article class="card"><div class="label">Top Scorer</div><div class="kpi">${topScorer.name}</div><div class="muted">${topScorer.goals} goals</div></article>
+        <article class="card"><div class="label">Open Fantasy Markets</div><div class="kpi">${oddsMarkets}</div></article>
+      `;
+    }
+
+    function renderDashboard() {
+      const table = standings();
+      const top3 = table.slice(0, 3);
+      const topFantasyPlayers = [...state.players]
+        .map(p => ({ ...p, fp: fantasyPoints(p) }))
+        .sort((a,b) => b.fp - a.fp)
+        .slice(0, 5);
+
+      document.getElementById('dashboard').innerHTML = `
+        <div class="two-col">
+          <article class="card">
+            <h3>League Snapshot</h3>
+            ${top3.map((r, i) => `<p>${i+1}. <strong>${r.team}</strong> — ${r.pts} pts (${r.gd >= 0 ? '+' : ''}${r.gd} GD)</p>`).join('')}
+            <p class="muted">Use Match Center to enter new results and refresh standings instantly.</p>
+          </article>
+          <article class="card">
+            <h3>Top Fantasy Performers</h3>
+            <table>
+              <thead><tr><th>Player</th><th>Team</th><th>FPTS</th></tr></thead>
+              <tbody>
+                ${topFantasyPlayers.map(p => `<tr><td>${p.name}</td><td>${teamName(p.teamId)}</td><td>${p.fp.toFixed(1)}</td></tr>`).join('')}
+              </tbody>
+            </table>
+          </article>
+        </div>
+      `;
+    }
+
+    function renderTeams() {
+      const table = standings();
+      document.getElementById('teams').innerHTML = `
+        <article class="card">
+          <h3>Standings</h3>
+          <table>
+            <thead>
+              <tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>
+            </thead>
+            <tbody>
+              ${table.map((r, idx) => `
+                <tr>
+                  <td>${idx + 1}</td><td>${r.team}</td><td>${r.played}</td><td>${r.won}</td><td>${r.draw}</td><td>${r.lost}</td>
+                  <td>${r.gf}</td><td>${r.ga}</td><td>${r.gd >= 0 ? '+' : ''}${r.gd}</td><td><strong>${r.pts}</strong></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </article>
+      `;
+    }
+
+    function renderPlayers() {
+      const players = [...state.players].map(p => ({ ...p, fp: fantasyPoints(p) }))
+        .sort((a,b) => b.fp - a.fp);
+      document.getElementById('players').innerHTML = `
+        <article class="card">
+          <h3>Extensive Player Stats</h3>
+          <table>
+            <thead>
+              <tr><th>Player</th><th>Team</th><th>Pos</th><th>Goals</th><th>Assists</th><th>Shots OT</th><th>Tackles</th><th>Saves</th><th>YC</th><th>RC</th><th>Minutes</th><th>Fantasy Pts</th></tr>
+            </thead>
+            <tbody>
+              ${players.map(p => `
+                <tr>
+                  <td>${p.name}</td>
+                  <td>${teamName(p.teamId)}</td>
+                  <td><span class="pill">${p.pos}</span></td>
+                  <td>${p.goals}</td><td>${p.assists}</td><td>${p.shotsOnTarget}</td><td>${p.tackles}</td><td>${p.saves}</td>
+                  <td>${p.yellow}</td><td>${p.red}</td><td>${p.mins}</td><td><strong>${p.fp.toFixed(1)}</strong></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </article>
+      `;
+    }
+
+    function renderMatches() {
+      const upcomingOptions = state.matches.filter(m => !m.completed)
+        .map(m => `<option value="${m.id}">${m.date}: ${teamName(m.home)} vs ${teamName(m.away)}</option>`).join('');
+
+      document.getElementById('matches').innerHTML = `
+        <div class="two-col">
+          <article class="card">
+            <h3>Fixtures & Results</h3>
+            <table>
+              <thead><tr><th>Date</th><th>Match</th><th>Score</th><th>Status</th></tr></thead>
+              <tbody>
+                ${state.matches.map(m => `
+                  <tr>
+                    <td>${m.date}</td>
+                    <td>${teamName(m.home)} vs ${teamName(m.away)}</td>
+                    <td>${m.completed ? `${m.homeGoals} - ${m.awayGoals}` : '-'}</td>
+                    <td>${m.completed ? '<span class="gain">Final</span>' : '<span class="warning">Upcoming</span>'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </article>
+
+          <article class="card">
+            <h3>Add Match Result</h3>
+            <div class="row">
+              <div>
+                <label class="label">Upcoming Match</label>
+                <select id="matchSelect">${upcomingOptions || '<option>No upcoming matches</option>'}</select>
+              </div>
+              <div>
+                <label class="label">Home Goals</label>
+                <input id="homeGoals" type="number" min="0" value="0" />
+              </div>
+              <div>
+                <label class="label">Away Goals</label>
+                <input id="awayGoals" type="number" min="0" value="0" />
+              </div>
+              <button id="saveResult" class="primary">Save Result</button>
+            </div>
+            <p class="muted">When you save a result, standings, KPIs, and fantasy markets recalculate automatically.</p>
+          </article>
+        </div>
+      `;
+
+      const btn = document.getElementById('saveResult');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          const id = Number(document.getElementById('matchSelect').value);
+          const hg = Number(document.getElementById('homeGoals').value);
+          const ag = Number(document.getElementById('awayGoals').value);
+          const match = state.matches.find(m => m.id === id);
+          if (!match || Number.isNaN(hg) || Number.isNaN(ag)) return alert('Enter valid details.');
+          match.homeGoals = hg;
+          match.awayGoals = ag;
+          match.completed = true;
+          renderAll();
+        });
+      }
+    }
+
+    function settlement(match, selection) {
+      if (!match.completed) return null;
+      const winner = match.homeGoals > match.awayGoals ? 'HOME' : (match.homeGoals < match.awayGoals ? 'AWAY' : 'DRAW');
+      return winner === selection;
+    }
+
+    function getOdds(match) {
+      const homeStrength = standings().find(s => s.teamId === match.home)?.pts || 1;
+      const awayStrength = standings().find(s => s.teamId === match.away)?.pts || 1;
+      const base = homeStrength + awayStrength + 6;
+      const home = (base / (homeStrength + 2)).toFixed(2);
+      const away = (base / (awayStrength + 2)).toFixed(2);
+      const draw = (base / 3.5).toFixed(2);
+      return { home: Number(home), draw: Number(draw), away: Number(away) };
+    }
+
+    function renderFantasy() {
+      const openMatches = state.matches.filter(m => !m.completed);
+      const marketRows = openMatches.map(m => {
+        const o = getOdds(m);
+        return `
+          <tr>
+            <td>${m.date}</td>
+            <td>${teamName(m.home)} vs ${teamName(m.away)}</td>
+            <td>Home ${o.home} | Draw ${o.draw} | Away ${o.away}</td>
+            <td>
+              <select data-bet-match="${m.id}" class="selection">
+                <option value="HOME">Home Win</option>
+                <option value="DRAW">Draw</option>
+                <option value="AWAY">Away Win</option>
+              </select>
+            </td>
+            <td><input type="number" min="10" step="10" value="50" data-stake-match="${m.id}" /></td>
+            <td><button class="place-bet" data-match="${m.id}">Place</button></td>
+          </tr>
+        `;
+      }).join('');
+
+      let pnl = 0;
+      const historyRows = state.bets.map((b, idx) => {
+        const m = state.matches.find(mm => mm.id === b.matchId);
+        const settled = settlement(m, b.selection);
+        const status = settled === null ? 'Open' : (settled ? 'Won' : 'Lost');
+        const result = settled === null ? 0 : (settled ? b.stake * b.odds - b.stake : -b.stake);
+        pnl += result;
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${teamName(m.home)} vs ${teamName(m.away)}</td>
+            <td>${b.selection}</td>
+            <td>${b.odds}</td>
+            <td>${b.stake}</td>
+            <td class="${result >= 0 ? 'gain' : 'loss'}">${result.toFixed(2)}</td>
+            <td>${status}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('fantasy').innerHTML = `
+        <div class="two-col">
+          <article class="card">
+            <h3>Fantasy Betting Markets (Virtual Currency)</h3>
+            <p>Wallet: <strong>${(state.wallet + pnl).toFixed(2)} coins</strong> <span class="muted">(Starting wallet: 1000)</span></p>
+            <table>
+              <thead><tr><th>Date</th><th>Fixture</th><th>Odds</th><th>Pick</th><th>Stake</th><th>Action</th></tr></thead>
+              <tbody>${marketRows || '<tr><td colspan="6" class="muted">No open markets.</td></tr>'}</tbody>
+            </table>
+            <p class="warning">For school tournaments, keep this non-monetary and educational.</p>
+          </article>
+
+          <article class="card">
+            <h3>Bet History & Settlement</h3>
+            <table>
+              <thead><tr><th>#</th><th>Match</th><th>Pick</th><th>Odds</th><th>Stake</th><th>P/L</th><th>Status</th></tr></thead>
+              <tbody>${historyRows || '<tr><td colspan="7" class="muted">No bets placed yet.</td></tr>'}</tbody>
+            </table>
+            <button id="clearBets" class="danger">Reset Fantasy Bets</button>
+          </article>
+        </div>
+      `;
+
+      document.querySelectorAll('.place-bet').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const matchId = Number(btn.dataset.match);
+          const pickEl = document.querySelector(`select[data-bet-match="${matchId}"]`);
+          const stakeEl = document.querySelector(`input[data-stake-match="${matchId}"]`);
+          const selection = pickEl.value;
+          const stake = Number(stakeEl.value);
+          if (stake < 10) return alert('Minimum stake is 10 coins.');
+          const match = state.matches.find(m => m.id === matchId);
+          const oddsData = getOdds(match);
+          const odds = selection === 'HOME' ? oddsData.home : (selection === 'DRAW' ? oddsData.draw : oddsData.away);
+
+          state.bets.push({ matchId, selection, odds, stake });
+          localStorage.setItem('schoolFantasyBets', JSON.stringify(state.bets));
+          renderFantasy();
+        });
+      });
+
+      const clear = document.getElementById('clearBets');
+      clear.addEventListener('click', () => {
+        state.bets = [];
+        localStorage.removeItem('schoolFantasyBets');
+        renderFantasy();
+      });
+    }
+
+    function bindTabs() {
+      document.getElementById('tabs').addEventListener('click', (e) => {
+        if (!e.target.matches('.tab-btn')) return;
+        const tab = e.target.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === tab));
+      });
+    }
+
+    function renderAll() {
+      renderKpis();
+      renderDashboard();
+      renderTeams();
+      renderPlayers();
+      renderMatches();
+      renderFantasy();
+    }
+
+    bindTabs();
+    renderAll();
+  </script>
+</body>
+</html>
